@@ -2,7 +2,8 @@ version: '3'
 
 services:
   namenode:
-    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    build: ./namenode
+    image: europe-gis/hadoop-namenode
     networks:
       - hbase
     volumes:
@@ -18,13 +19,14 @@ services:
         condition: on-failure
       placement:
         constraints:
-          - node.hostname == akswnc4.aksw.uni-leipzig.de
+          - node.labels.hadoop_role==master
       labels:
         traefik.docker.network: hbase
         traefik.port: 50070
 
   datanode:
-    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    build: ./datanode
+    image: europe-gis/hadoop-datanode
     networks:
       - hbase
     volumes:
@@ -42,7 +44,8 @@ services:
         traefik.port: 50075
 
   resourcemanager:
-    image: bde2020/hadoop-resourcemanager:2.0.0-hadoop3.2.1-java8
+    build: ./resourcemanager
+    image: europe-gis/hadoop-resourcemanager
     networks:
       - hbase
     environment:
@@ -56,7 +59,7 @@ services:
         condition: on-failure
       placement:
         constraints:
-          - node.hostname == akswnc4.aksw.uni-leipzig.de
+          - node.labels.hadoop_role==master
       labels:
         traefik.docker.network: hbase
         traefik.port: 8088
@@ -64,7 +67,8 @@ services:
       disable: true
 
   nodemanager:
-    image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.2.1-java8
+    build: ./nodemanager
+    image: europe-gis/hadoop-nodemanager
     networks:
       - hbase
     environment:
@@ -80,7 +84,8 @@ services:
         traefik.port: 8042
 
   historyserver:
-    image: bde2020/hadoop-historyserver:2.0.0-hadoop3.2.1-java8
+    build: ./historyserver
+    image: europe-gis/hadoop-historyserver
     networks:
       - hbase
     volumes:
@@ -94,7 +99,7 @@ services:
       replicas: 1
       placement:
         constraints:
-          - node.hostname == akswnc4.aksw.uni-leipzig.de
+          - node.labels.hadoop_role==master
       labels:
         traefik.docker.network: hbase
         traefik.port: 8188
