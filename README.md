@@ -2,27 +2,28 @@
 
 # Changes
 
-Version 2.0.0 introduces uses wait_for_it script for the cluster startup
+This is a forked repository to make it compatible with a Raspberry Pi 4 cluster setup
 
 # Hadoop Docker
 
-## Supported Hadoop Versions
-See repository branches for supported hadoop versions
 
 ## Quick Start
 
 To deploy an example HDFS cluster, run:
+
 ```
-  docker-compose up
+docker-compose up -d
 ```
 
-Run example wordcount job:
 ```
-  make wordcount
+cd ./base
+docker build -t europe-gis/hadoop_base .
 ```
+
 
 Or deploy in swarm:
 ```
+docker network create -d overlay --attachable hbase
 docker stack deploy -c docker-compose-v3.yml hadoop
 ```
 

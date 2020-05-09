@@ -1,7 +1,5 @@
 FROM europe-gis/hadoop_base
 
-MAINTAINER Ivan Ermilov <ivan.s.ermilov@gmail.com>
-
 HEALTHCHECK CMD curl -f http://localhost:8088/ || exit 1
 
 ADD run.sh /run.sh

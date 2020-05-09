@@ -1,7 +1,5 @@
 FROM europe-gis/hadoop_base
 
-MAINTAINER Ivan Ermilov <ivan.s.ermilov@gmail.com>
-
 HEALTHCHECK CMD curl -f http://localhost:9864/ || exit 1
 
 ENV HDFS_CONF_dfs_datanode_data_dir=file:///hadoop/dfs/data
