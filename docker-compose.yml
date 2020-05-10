@@ -3,64 +3,84 @@ version: "3"
 services:
   namenode:
     build: ./namenode
-    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    image: tomer23/europe-gis:hadoop_namenode
     container_name: namenode
-    restart: always
-    ports:
-      - 9870:9870
-      - 9000:9000
+    networks:
+      - hbase
     volumes:
       - hadoop_namenode:/hadoop/dfs/name
     environment:
       - CLUSTER_NAME=test
     env_file:
-      - ./hadoop.env
-
-  datanode:
-    build: ./datanode
-    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
-    container_name: datanode
-    restart: always
-    volumes:
-      - hadoop_datanode:/hadoop/dfs/data
-    environment:
-      SERVICE_PRECONDITION: "namenode:9870"
-    env_file:
-      - ./hadoop.env
+      - ./hadoop_master.env
+    ports:
+      - "9870:9870"
   
   resourcemanager:
     build: ./resourcemanager
-    image: bde2020/hadoop-resourcemanager:2.0.0-hadoop3.2.1-java8
+    image: tomer23/europe-gis:hadoop_resourcemanager
     container_name: resourcemanager
-    restart: always
-    environment:
-      SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode:9864"
+    networks:
+      - hbase
+    restart: on-failure
+    depends_on:
+      - namenode
+      - datanode
     env_file:
-      - ./hadoop.env
-
-  nodemanager1:
-    build: ./nodemanager
-    image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.2.1-java8
-    container_name: nodemanager
-    restart: always
-    environment:
-      SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode:9864 resourcemanager:8088"
-    env_file:
-      - ./hadoop.env
+      - ./hadoop_master.env
+    ports:
+      - "8088:8088"
   
   historyserver:
     build: ./historyserver
-    image: bde2020/hadoop-historyserver:2.0.0-hadoop3.2.1-java8
+    image: tomer23/europe-gis:hadoop_historyserver
     container_name: historyserver
-    restart: always
-    environment:
-      SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode:9864 resourcemanager:8088"
+    networks:
+      - hbase
+    depends_on:
+      - namenode
+      - datanode
     volumes:
       - hadoop_historyserver:/hadoop/yarn/timeline
     env_file:
-      - ./hadoop.env
+      - ./hadoop_master.env
+    ports:
+      - "8188:8188"
   
+  nodemanager:
+    build: ./nodemanager
+    image: tomer23/europe-gis:hadoop_nodemanager
+    container_name: nodemanager
+    networks:
+      - hbase
+    depends_on:
+      - namenode
+      - datanode
+    env_file:
+      - ./hadoop_master.env
+    ports:
+      - "8042:8042"
+  
+  datanode:
+    build: ./datanode
+    image: tomer23/europe-gis:hadoop_datanode
+    container_name: datanode
+    networks:
+      - hbase
+    depends_on:
+      - namenode
+    volumes:
+      - hadoop_datanode:/hadoop/dfs/data
+    env_file:
+      - ./hadoop_master.env
+  
+
 volumes:
   hadoop_namenode:
   hadoop_datanode:
   hadoop_historyserver:
+
+networks:
+  hbase:
+    external:
+      name: hbase

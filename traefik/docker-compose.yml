@@ -1,0 +1,20 @@
+version: "3"
+
+services:
+  traefik:
+    image: traefik
+    command:
+    - "--log.level=DEBUG"
+    - "--api=true"
+    - "--api.dashboard=true"
+    - "--ping=true"
+    - "--providers.docker=true"
+    - "--providers.docker.exposedbydefault=false"
+    - "--entrypoints.http.address=:81"
+    ports:
+      - "81:81"
+      - "8081:8080"
+    labels:
+      - "traefik.enable=true"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock

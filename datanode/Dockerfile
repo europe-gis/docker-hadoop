@@ -1,4 +1,4 @@
-FROM europe-gis/hadoop_base
+FROM tomer23/europe-gis:hadoop_base
 
 HEALTHCHECK CMD curl -f http://localhost:9864/ || exit 1
 

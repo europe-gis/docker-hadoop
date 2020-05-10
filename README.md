@@ -17,7 +17,25 @@ docker-compose up -d
 
 ```
 cd ./base
-docker build -t europe-gis/hadoop_base .
+docker build -t tomer23/europe-gis:hadoop_base .
+docker push tomer23/europe-gis:hadoop_base
+cd ..
+cd ./datanode
+docker build -t tomer23/europe-gis:hadoop_datanode .
+docker push tomer23/europe-gis:hadoop_datanode
+cd ..
+cd ./namenode
+docker build -t tomer23/europe-gis:hadoop_namenode .
+docker push tomer23/europe-gis:hadoop_namenode
+cd ..
+cd ./nodemanager
+docker build -t tomer23/europe-gis:hadoop_nodemanager .
+docker push tomer23/europe-gis:hadoop_nodemanager
+cd ..
+cd ./resourcemanager
+docker build -t tomer23/europe-gis:hadoop_resourcemanager .
+docker push tomer23/europe-gis:hadoop_resourcemanager
+cd ..
 ```
 
 

@@ -1,113 +1,118 @@
-version: '3'
+version: "3.3"
 
-services:
+services:  
   namenode:
     build: ./namenode
-    image: europe-gis/hadoop-namenode
+    image: tomer23/europe-gis:hadoop_namenode
     networks:
       - hbase
+    ports:
+      - "9870:9870"
+      - "9000:9000"
     volumes:
       - namenode:/hadoop/dfs/name
     environment:
-      - CLUSTER_NAME=test
+      - CLUSTER_NAME=gis
     env_file:
-      - ./hadoop.env
+      - ./hadoop_master.env
     deploy:
       mode: replicated
       replicas: 1
       restart_policy:
         condition: on-failure
       placement:
-        constraints:
-          - node.labels.hadoop_role==master
-      labels:
-        traefik.docker.network: hbase
-        traefik.port: 50070
+        constraints: [node.role==manager]
 
   datanode:
     build: ./datanode
-    image: europe-gis/hadoop-datanode
+    image: tomer23/europe-gis:hadoop_datanode
     networks:
       - hbase
     volumes:
       - datanode:/hadoop/dfs/data
     env_file:
-      - ./hadoop.env
+      - ./hadoop_master.env
+    ports:
+      - "9864:9864"
     environment:
-      SERVICE_PRECONDITION: "namenode:50070"
+      SERVICE_PRECONDITION: "namenode:9870"
+    depends_on:
+      - namenode
     deploy:
       mode: global
       restart_policy:
         condition: on-failure
-      labels:
-        traefik.docker.network: hbase
-        traefik.port: 50075
+      placement:
+        constraints: [node.role==manager]
+
+  datanode_worker:
+    build: ./datanode
+    image: tomer23/europe-gis:hadoop_datanode
+    networks:
+      - hbase
+    volumes:
+      - datanode_worker:/hadoop/dfs/data
+    env_file:
+      - ./hadoop_worker.env
+    ports:
+      - "9865:9864"
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870"
+    depends_on:
+      - namenode
+    deploy:
+      mode: global
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints: [node.role==worker]
 
   resourcemanager:
     build: ./resourcemanager
-    image: europe-gis/hadoop-resourcemanager
+    image: tomer23/europe-gis:hadoop_resourcemanager
     networks:
       - hbase
-    environment:
-      SERVICE_PRECONDITION: "namenode:50070 datanode:50075"
+    depends_on:
+      - namenode
+      - datanode
     env_file:
-      - ./hadoop.env
+      - ./hadoop_master.env
+    ports:
+      - "8088:8088"
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870 datanode:9864"
     deploy:
       mode: replicated
       replicas: 1
       restart_policy:
         condition: on-failure
       placement:
-        constraints:
-          - node.labels.hadoop_role==master
-      labels:
-        traefik.docker.network: hbase
-        traefik.port: 8088
+        constraints: [node.role==manager]
     healthcheck:
       disable: true
 
   nodemanager:
     build: ./nodemanager
-    image: europe-gis/hadoop-nodemanager
+    image: tomer23/europe-gis:hadoop_nodemanager
     networks:
       - hbase
+    depends_on: 
+      - namenode
+      - datanode
+      - resourcemanager
     environment:
-      SERVICE_PRECONDITION: "namenode:50070 datanode:50075 resourcemanager:8088"
+      SERVICE_PRECONDITION: "namenode:9870 datanode:9864 resourcemanager:8088"
     env_file:
-      - ./hadoop.env
+      - ./hadoop_master.env
     deploy:
       mode: global
       restart_policy:
         condition: on-failure
-      labels:
-        traefik.docker.network: hbase
-        traefik.port: 8042
-
-  historyserver:
-    build: ./historyserver
-    image: europe-gis/hadoop-historyserver
-    networks:
-      - hbase
-    volumes:
-      - hadoop_historyserver:/hadoop/yarn/timeline
-    environment:
-      SERVICE_PRECONDITION: "namenode:50070 datanode:50075 resourcemanager:8088"
-    env_file:
-      - ./hadoop.env
-    deploy:
-      mode: replicated
-      replicas: 1
-      placement:
-        constraints:
-          - node.labels.hadoop_role==master
-      labels:
-        traefik.docker.network: hbase
-        traefik.port: 8188
 
 volumes:
-  datanode:
   namenode:
-  hadoop_historyserver:
+  datanode:
+  datanode_worker:
 
 networks:
   hbase:
